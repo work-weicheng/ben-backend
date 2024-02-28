@@ -37,7 +37,7 @@ async def create_file(file: Annotated[bytes, File()]):
 
 @app.post(
     "/uploadfile",
-    # responses={200: {"content": {"image/jpg": {}}}},
+    # responses={200: {"content": {"image/jpg": {}}}},123
     # response_class=Response,
 )
 async def create_upload_file(file: UploadFile):
