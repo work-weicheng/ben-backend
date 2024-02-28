@@ -9,6 +9,8 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from utils import delete_files_in_directory
+
 app = FastAPI()
 IMAGE_DIR = "./images"
 app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
@@ -109,18 +111,6 @@ def process_video(file_location):
     # last_frame_bytes = cv2.imencode(".jpg", last_frame)[1]
 
     return first_frame_bytes, last_frame_bytes, first_frame, last_frame
-
-
-def delete_files_in_directory(directory_path):
-    try:
-        files = os.listdir(directory_path)
-        for file in files:
-            file_path = os.path.join(directory_path, file)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-        print("All files deleted successfully.")
-    except OSError:
-        print("Error occurred while deleting files.")
 
 
 @app.post("/post")
