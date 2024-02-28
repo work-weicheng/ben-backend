@@ -1,0 +1,11 @@
+# Folder to ignore
+.git
+__pycache__/
+.credentials/
+.vscode/
+.venv/
+
+# Files to ignore
+*.pyc
+*.pyo
+*.env
