@@ -1,4 +1,5 @@
 # Folder to ignore
+.DS_Store
 .git
 __pycache__/
 .credentials/
