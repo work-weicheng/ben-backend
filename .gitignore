@@ -4,7 +4,7 @@ __pycache__/
 .credentials/
 .vscode/
 .venv/
-images/
+images/*
 
 # Files to ignore
 *.pyc
