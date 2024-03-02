@@ -26,6 +26,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
 
 
+# Model of the request body
 class Item(BaseModel):
     file: str
 
