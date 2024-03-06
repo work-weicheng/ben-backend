@@ -1,5 +1,6 @@
 import io
 import os
+import subprocess
 import time
 from typing import Annotated, Union
 
@@ -9,11 +10,11 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from utils import delete_files_in_directory
+from utils import delete_files_in_directory, get_file_objects
 
 app = FastAPI()
-IMAGE_DIR = "./images"
-app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
+RESOURCES_DIR = "./resources"
+app.mount("/resources", StaticFiles(directory=RESOURCES_DIR), name="resources")
 
 
 @app.get("/")
@@ -47,17 +48,18 @@ async def create_upload_file(file: UploadFile):
     with open(file_location, "wb") as buffer:
         buffer.write(await file.read())
 
-    delete_files_in_directory("./images")
+    delete_files_in_directory(RESOURCES_DIR)
 
     # Process the uploaded file using OpenCV
     first_frame_bytes, last_frame_bytes, first_frame, last_frame = process_video(
         file_location
     )
-    cv2.imwrite("./images/first_image.jpg", first_frame)
-    cv2.imwrite("./images/last_image.jpg", last_frame)
+    process_video_five_seconds(file_location)
 
-    # Return all file names in images directory
-    return os.listdir(IMAGE_DIR)
+    cv2.imwrite(RESOURCES_DIR + "/first_image.jpg", first_frame)
+    cv2.imwrite(RESOURCES_DIR + "/last_image.jpg", last_frame)
+
+    return get_file_objects(RESOURCES_DIR)
 
     # Return the first and last frames as a list of byte strings
     # return Response(content=first_frame_bytes, media_type="image/jpg")
@@ -112,6 +114,49 @@ def process_video(file_location):
     # last_frame_bytes = cv2.imencode(".jpg", last_frame)[1]
 
     return first_frame_bytes, last_frame_bytes, first_frame, last_frame
+
+
+def process_video_five_seconds(file_location):
+    cap = cv2.VideoCapture(file_location)
+    if not cap.isOpened():
+        raise ValueError("Could not open video file")
+    # Get the frames per second (fps) of the video
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    # Calculate the number of frames for 5 seconds
+    num_frames = int(fps * 5)
+    # Create a folder to store the frames
+    os.makedirs("frames", exist_ok=True)
+    # Read the first 5 seconds of the video and save the frames
+    for i in range(num_frames):
+        success, frame = cap.read()
+        if not success:
+            break
+
+        # Save each frame as an image
+        cv2.imwrite(f"frames/frame_{i}.jpg", frame)
+    # Release the video capture object
+    cap.release()
+    # Use FFmpeg to encode the frames back into a video file
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-framerate",
+            str(fps),
+            "-i",
+            "frames/frame_%d.jpg",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-crf",
+            "23",
+            "output.mp4",
+        ]
+    )
+    # Move the output video file to the images folder
+    os.rename("output.mp4", "resources/first_5_seconds.mp4")
+    # Remove the temporary files and folder
+    delete_files_in_directory("./frames")
 
 
 @app.post("/post")
