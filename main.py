@@ -6,6 +6,7 @@ from typing import Annotated, Union
 
 import cv2
 from fastapi import FastAPI, File, Response, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -13,6 +14,16 @@ from pydantic import BaseModel
 from utils import delete_files_in_directory, get_file_objects
 
 app = FastAPI()
+origins = [
+    "http://localhost:5173",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 RESOURCES_DIR = "./resources"
 app.mount("/resources", StaticFiles(directory=RESOURCES_DIR), name="resources")
 
@@ -54,10 +65,10 @@ async def create_upload_file(file: UploadFile):
     first_frame_bytes, last_frame_bytes, first_frame, last_frame = process_video(
         file_location
     )
-    process_video_five_seconds(file_location)
-
-    cv2.imwrite(RESOURCES_DIR + "/first_image.jpg", first_frame)
-    cv2.imwrite(RESOURCES_DIR + "/last_image.jpg", last_frame)
+    process_video_n_seconds(file_location, 1, "01")
+    cv2.imwrite(RESOURCES_DIR + "/result01.jpg", first_frame)
+    process_video_n_seconds(file_location, 5, "02")
+    cv2.imwrite(RESOURCES_DIR + "/result02.jpg", last_frame)
 
     return get_file_objects(RESOURCES_DIR)
 
@@ -116,14 +127,14 @@ def process_video(file_location):
     return first_frame_bytes, last_frame_bytes, first_frame, last_frame
 
 
-def process_video_five_seconds(file_location):
+def process_video_n_seconds(file_location, n_seconds, serial_number):
     cap = cv2.VideoCapture(file_location)
     if not cap.isOpened():
         raise ValueError("Could not open video file")
     # Get the frames per second (fps) of the video
     fps = cap.get(cv2.CAP_PROP_FPS)
     # Calculate the number of frames for 5 seconds
-    num_frames = int(fps * 5)
+    num_frames = int(fps * n_seconds)
     # Create a folder to store the frames
     os.makedirs("frames", exist_ok=True)
     # Read the first 5 seconds of the video and save the frames
@@ -154,7 +165,7 @@ def process_video_five_seconds(file_location):
         ]
     )
     # Move the output video file to the images folder
-    os.rename("output.mp4", "resources/first_5_seconds.mp4")
+    os.rename("output.mp4", f"resources/result{serial_number}.mp4")
     # Remove the temporary files and folder
     delete_files_in_directory("./frames")
 
