@@ -10,22 +10,34 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import FileResponse
 
 from utils import delete_files_in_directory, get_file_objects
 
-app = FastAPI()
 origins = [
     "http://localhost:5173",
+    # "*",
 ]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+middleware = [Middleware(CORSMiddleware, allow_origins=origins)]
+app = FastAPI(middleware=middleware)
 
 RESOURCES_DIR = "./resources"
 app.mount("/resources", StaticFiles(directory=RESOURCES_DIR), name="resources")
+
+
+# @app.get("/resources/{file_path:path}")
+# async def download_file(file_path: str, response: Response):
+#     # Set the path to the file
+#     full_file_path = f"{RESOURCES_DIR}/{file_path}"
+#
+#     # Set Content-Disposition header to attachment to prompt download
+#     response.headers["Content-Disposition"] = f"attachment; filename={file_path}"
+#     response.headers["Accept-Ranges"] = "bytes"
+#
+#     # Return the file as a response
+#     return FileResponse(full_file_path)
 
 
 @app.get("/")
@@ -67,9 +79,12 @@ async def create_upload_file(file: UploadFile):
     )
     process_video_n_seconds(file_location, 1, "01")
     cv2.imwrite(RESOURCES_DIR + "/result01.jpg", first_frame)
-    process_video_n_seconds(file_location, 5, "02")
+    process_video_n_seconds(file_location, 2, "02")
     cv2.imwrite(RESOURCES_DIR + "/result02.jpg", last_frame)
-
+    process_video_n_seconds(file_location, 3, "03")
+    cv2.imwrite(RESOURCES_DIR + "/result03.jpg", first_frame)
+    process_video_n_seconds(file_location, 4, "04")
+    cv2.imwrite(RESOURCES_DIR + "/result04.jpg", last_frame)
     return get_file_objects(RESOURCES_DIR)
 
     # Return the first and last frames as a list of byte strings
