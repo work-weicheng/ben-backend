@@ -1,5 +1,7 @@
 import os
 
+from enums import ViolationType
+
 
 def delete_files_in_directory(directory_path):
     try:
@@ -23,7 +25,14 @@ def get_file_objects(folder_path):
     for file in files:
         file_name, file_extension = os.path.splitext(file)
         if file_extension == ".mp4":
-            file_objects.append({"video": file, "image": file_name + ".jpg"})
-
+            file_objects.append(
+                {
+                    "type": ViolationType.CROSSING.value,
+                    "isReportable": True,
+                    "timestamp": "2021-10-10 10:10:10 - 11:20:00",
+                    "video": file,
+                    "image": file_name + ".jpg",
+                }
+            )
 
     return file_objects

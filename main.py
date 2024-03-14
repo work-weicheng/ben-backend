@@ -1,21 +1,17 @@
-import io
 import os
 import subprocess
-import time
-from typing import Annotated, Union
 
 import cv2
-from fastapi import FastAPI, File, Response, UploadFile
+from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import FileResponse
 
 from utils import delete_files_in_directory, get_file_objects
 
+# Cross-Origin Resource Sharing (CORS) middleware
 origins = [
     "http://localhost:5173",
     # "*",
@@ -27,27 +23,9 @@ RESOURCES_DIR = "./resources"
 app.mount("/resources", StaticFiles(directory=RESOURCES_DIR), name="resources")
 
 
-# @app.get("/resources/{file_path:path}")
-# async def download_file(file_path: str, response: Response):
-#     # Set the path to the file
-#     full_file_path = f"{RESOURCES_DIR}/{file_path}"
-#
-#     # Set Content-Disposition header to attachment to prompt download
-#     response.headers["Content-Disposition"] = f"attachment; filename={file_path}"
-#     response.headers["Accept-Ranges"] = "bytes"
-#
-#     # Return the file as a response
-#     return FileResponse(full_file_path)
-
-
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+    return {"Backend Status:": " Working"}
 
 
 # Model of the request body
@@ -55,15 +33,8 @@ class Item(BaseModel):
     file: str
 
 
-@app.post("/file")
-async def create_file(file: Annotated[bytes, File()]):
-    return {"file_size": len(file)}
-
-
 @app.post(
     "/uploadfile",
-    # responses={200: {"content": {"image/jpg": {}}}},123
-    # response_class=Response,
 )
 async def create_upload_file(file: UploadFile):
     # Save the uploaded file to a temporary location
@@ -71,6 +42,7 @@ async def create_upload_file(file: UploadFile):
     with open(file_location, "wb") as buffer:
         buffer.write(await file.read())
 
+    # Delete all files in the resources directory
     delete_files_in_directory(RESOURCES_DIR)
 
     # Process the uploaded file using OpenCV
@@ -85,28 +57,8 @@ async def create_upload_file(file: UploadFile):
     cv2.imwrite(RESOURCES_DIR + "/result03.jpg", first_frame)
     process_video_n_seconds(file_location, 4, "04")
     cv2.imwrite(RESOURCES_DIR + "/result04.jpg", last_frame)
+
     return get_file_objects(RESOURCES_DIR)
-
-    # Return the first and last frames as a list of byte strings
-    # return Response(content=first_frame_bytes, media_type="image/jpg")
-
-
-@app.post("/stream")
-async def stream_response(file: UploadFile):
-    data = b"hello world\n" * 20000
-    stream = io.BytesIO(data)
-    return StreamingResponse(stream, media_type="text/plain")
-    # # Save the uploaded file to a temporary location
-    # file_location = f"/tmp/{file.filename}"
-    # with open(file_location, "wb") as buffer:
-    #     buffer.write(await file.read())
-    #
-    # # Process the uploaded file using OpenCV
-    # first_frame, last_frame = process_video(file_location)
-    #
-    # # Return the first and last frames as a list of byte strings
-    # return Response(content=last_frame, media_type="image/jpg")
-    # return {"first_frame": "dd", "last_frame": "sdd"}
 
 
 def process_video(file_location):
@@ -173,7 +125,7 @@ def process_video_n_seconds(file_location, n_seconds, serial_number):
             "-c:v",
             "libx264",
             "-pix_fmt",
-            "yuv420p",
+            "yuvj420p",
             "-crf",
             "23",
             "output.mp4",
@@ -183,11 +135,3 @@ def process_video_n_seconds(file_location, n_seconds, serial_number):
     os.rename("output.mp4", f"resources/result{serial_number}.mp4")
     # Remove the temporary files and folder
     delete_files_in_directory("./frames")
-
-
-@app.post("/post")
-def process_file(item: Item):
-    if item.file == "test":
-        return {"file": item.file, "message": "Test file received"}
-    time.sleep(2)
-    return item
