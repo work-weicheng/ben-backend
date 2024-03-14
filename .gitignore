@@ -5,7 +5,8 @@ __pycache__/
 .credentials/
 .vscode/
 .venv/
-resources/*
+resources/*.jpg
+resources/*.mp4
 
 # Files to ignore
 *.pyc
