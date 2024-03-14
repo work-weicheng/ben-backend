@@ -20,8 +20,6 @@ def get_file_objects(folder_path):
     files = os.listdir(folder_path)
 
     # return objects with an array of image name and video name that has the same name
-    # for example: if there is a file named "result01.mp4", "result01.jpg", "result02.mp4" and "result02.jpg" in the folder, it will return
-    # [ { "video": "result01.mp4", "image": "result01.jpg" }, { "video": "result02.mp4", "image": "result02.jpg" } ]
     for file in files:
         file_name, file_extension = os.path.splitext(file)
         if file_extension == ".mp4":
