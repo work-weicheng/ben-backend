@@ -14,6 +14,7 @@ from utils import delete_files_in_directory, get_file_objects
 # Cross-Origin Resource Sharing (CORS) middleware
 origins = [
     "http://localhost:5173",
+    "http://localhost:8082",
     # "*",
 ]
 middleware = [Middleware(CORSMiddleware, allow_origins=origins)]
@@ -102,36 +103,53 @@ def process_video_n_seconds(file_location, n_seconds, serial_number):
     fps = cap.get(cv2.CAP_PROP_FPS)
     # Calculate the number of frames for 5 seconds
     num_frames = int(fps * n_seconds)
-    # Create a folder to store the frames
-    os.makedirs("frames", exist_ok=True)
-    # Read the first 5 seconds of the video and save the frames
-    for i in range(num_frames):
-        success, frame = cap.read()
-        if not success:
-            break
 
-        # Save each frame as an image
-        cv2.imwrite(f"frames/frame_{i}.jpg", frame)
-    # Release the video capture object
-    cap.release()
-    # Use FFmpeg to encode the frames back into a video file
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-framerate",
-            str(fps),
-            "-i",
-            "frames/frame_%d.jpg",
-            "-c:v",
-            "libx264",
-            "-pix_fmt",
-            "yuvj420p",
-            "-crf",
-            "23",
-            "output.mp4",
-        ]
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    out = cv2.VideoWriter(
+        f"resources/result{serial_number}.mp4",
+        fourcc,
+        fps,
+        (int(cap.get(3)), int(cap.get(4))),
     )
-    # Move the output video file to the images folder
-    os.rename("output.mp4", f"resources/result{serial_number}.mp4")
-    # Remove the temporary files and folder
-    delete_files_in_directory("./frames")
+    for _ in range(num_frames):
+        ret, frame = cap.read()
+        if ret:
+            out.write(frame)
+        else:
+            break
+    cap.release()
+    out.release()
+
+    # Create a folder to store the frames
+    # os.makedirs("frames", exist_ok=True)
+    # # Read the first 5 seconds of the video and save the frames
+    # for i in range(num_frames):
+    #     success, frame = cap.read()
+    #     if not success:
+    #         break
+    #
+    #     # Save each frame as an image
+    #     cv2.imwrite(f"frames/frame_{i}.jpg", frame)
+    # # Release the video capture object
+    # cap.release()
+    # # Use FFmpeg to encode the frames back into a video file
+    # subprocess.run(
+    #     [
+    #         "ffmpeg",
+    #         "-framerate",
+    #         str(fps),
+    #         "-i",
+    #         "frames/frame_%d.jpg",
+    #         "-c:v",
+    #         "libx264",
+    #         "-pix_fmt",
+    #         "yuvj420p",
+    #         "-crf",
+    #         "23",
+    #         "output.mp4",
+    #     ]
+    # )
+    # # Move the output video file to the images folder
+    # os.rename("output.mp4", f"resources/result{serial_number}.mp4")
+    # # Remove the temporary files and folder
+    # delete_files_in_directory("./frames")
