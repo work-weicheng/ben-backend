@@ -13,8 +13,8 @@ from utils import delete_files_in_directory, get_file_objects
 
 # Cross-Origin Resource Sharing (CORS) middleware
 origins = [
+    "https://ben-frontend.vercel.app/",
     "http://localhost:5173",
-    "http://localhost:8082",
     # "*",
 ]
 middleware = [Middleware(CORSMiddleware, allow_origins=origins)]
