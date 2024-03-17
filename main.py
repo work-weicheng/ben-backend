@@ -13,7 +13,11 @@ from utils import delete_files_in_directory, get_file_objects
 
 # Cross-Origin Resource Sharing (CORS) middleware
 origins = [
+    # PRODUCTION URL
     "https://ben-frontend.vercel.app",
+    # PREVIEW URL
+    "https://ben-frontend-git-develop-weicheng2138.vercel.app",
+    # DEVELOPMENT URL
     "http://localhost:5173",
     # "*",
 ]
