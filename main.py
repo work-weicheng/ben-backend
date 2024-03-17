@@ -44,7 +44,7 @@ async def create_upload_file(file: UploadFile):
         buffer.write(await file.read())
 
     # Delete all files in the resources directory
-    delete_files_in_directory(RESOURCES_DIR)
+    delete_files_in_directory(RESOURCES_DIR, ".md")
 
     # Process the uploaded file using OpenCV
     first_frame_bytes, last_frame_bytes, first_frame, last_frame = process_video(

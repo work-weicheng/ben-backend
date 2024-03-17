@@ -3,11 +3,15 @@ import os
 from enums import ViolationType
 
 
-def delete_files_in_directory(directory_path):
+def delete_files_in_directory(directory_path, exception_file_extension=None):
     try:
         files = os.listdir(directory_path)
         for file in files:
             file_path = os.path.join(directory_path, file)
+            # check if the file has the same extension as the exception_file_extension
+            if exception_file_extension:
+                if file.endswith(exception_file_extension):
+                    continue
             if os.path.isfile(file_path):
                 os.remove(file_path)
         print("All files deleted successfully.")
